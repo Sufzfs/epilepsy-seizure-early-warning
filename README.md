@@ -1,1 +1,66 @@
-Predicting Epileptic Seizures 15 Minutes Before Onset (Edge AI)Most machine learning projects around epilepsy focus on seizure detection—flagging brainwaves while a seizure is already actively happening. Clinically, that’s often too late.This project shifts the focus to pre-ictal forecasting: identifying the subtle, chaotic frequency shifts that happen 10 to 15 minutes before physical symptoms start.By analyzing multi-channel EEG continuous recordings, converting windowed signals into frequency band power metrics, and quantizing the resulting neural network to 8-bit integers (INT8), the entire model fits under 15 KB. That means it runs completely offline on inexpensive microcontrollers like the ESP32-S3 or Raspberry Pi Pico W—giving patients actionable warning time without relying on cloud infrastructure.💡 Key Design ChoicesWhy Forecasting Over Detection? Detecting a seizure while it occurs tells a patient what they already know. Forecasting gives a 15-minute buffer to sit down, notify a caregiver, or take medication.Feature Engineering over Raw Waveforms: Feeding 23 raw high-frequency EEG channels directly into a deep model wastes memory. Instead, Welch’s Power Spectral Density (PSD) converts 5-second time windows into log-power across five canonical physiological frequency bands ($\delta, \theta, \alpha, \beta, \gamma$).Microcontroller Quantization: Using Post-Training Quantization (PTQ) via TensorFlow Lite for Microcontrollers reduces memory footprint by ~10x while retaining high diagnostic accuracy.
+# Edge-AI Epilepsy Seizure Forecasting & Closed-Loop Neurostimulation Network
+
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](https://python.org)
+[![PyTorch](https://img.shields.io/badge/Framework-PyTorch%20%2F%20C++-orange)](https://pytorch.org)
+[![Federated](https://img.shields.io/badge/Federated%20Learning-PyTorch%20FedAvg-green)](https://pytorch.org)
+[![Hardware](https://img.shields.io/badge/Target%20Hardware-ARM%20Cortex--M%20%2F%20ESP32-purple)]()
+[![License](https://img.shields.io/badge/License-MIT-red)](LICENSE)
+
+---
+
+## Abstract
+
+Epileptic seizures affect over 50 million people worldwide, often causing unpredicted injuries due to sudden clinical onset. Traditional seizure monitoring relies on passive, post-hoc analysis rather than real-time, closed-loop intervention.
+
+This repository presents an end-to-end **Edge-AI Seizure Forecasting & Closed-Loop Neural Intervention System**. The pipeline processes low-latency 1D EEG time-series telemetry on resource-constrained microcontrollers, triggers high-frequency **130 Hz Deep Brain Stimulation (DBS)** to disrupt hypersynchronous spike-wave discharges before clinical onset, and aggregates global model weights across edge nodes using **privacy-preserving Federated Learning (FedAvg)**.
+
+---
+
+## System Architecture
+
+
+┌─────────────────────────────────────────────────────────────┐
+│ 1. Real-Time EEG Telemetry & Edge Inference                 │
+│    • 1D Time-Series EEG Signal Processing                   │
+│    • Quantized Neural Network (INT8 C++ Header Export)      │
+│    • Deployed on ARM Cortex-M / Edge Microcontrollers       │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│ 2. Closed-Loop Neurostimulation Trigger                     │
+│    • Evaluates Pre-Ictal Probability Score (P >= 0.85)       │
+│    • Fires Biphasic 130 Hz Deep Brain Stimulation (DBS)    │
+│    • Dampens Pathological Delta-Band Hypersynchrony         │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│ 3. Privacy-Preserving Federated Network (PyTorch FedAvg)    │
+│    • Local Edge Training on Private Patient EEG Data        │
+│    • Zero-Dependency PyTorch FedAvg Weight Aggregation      │
+│    • Zero Raw Data Transmission Across Devices             │
+└──────────────────────────────┘
+
+
+
+
+### 1. Closed-Loop Suppression Dynamics
+
+$$S_{\text{suppressed}}(t) = S_{\text{EEG}}(t) - A \cdot \sin(2\pi f t) \cdot e^{-\lambda t}$$
+
+Where:
+* S_{\text{EEG}}(t) is the incoming raw pre-ictal signal.
+* f = 130.0 Hz represents Deep Brain Stimulation (DBS) frequency.
+* A is the dynamic pulse voltage amplitude.
+* \lambda is the exponential decay rate.
+
+---
+
+### 2. Privacy-Preserving Federated Aggregation (FedAvg)
+
+$$\mathbf{w}_{t+1} = \sum_{k=1}^K \frac{n_k}{n} \mathbf{w}_{t+1}^k$$
+
+Where:
+* n_k is the number of local EEG samples at edge node k.
+* n = \sum n_k is the total dataset size across all patient hardware units.
